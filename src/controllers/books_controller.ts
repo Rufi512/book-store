@@ -39,20 +39,23 @@ export const book = async (req:Request,res:Response) =>{
 		if(!req.params.id) return res.status(404).json({message:'No se ha obtenido el id del libro'})
 		const request = await axios.get(`https://www.goodreads.com/book/show/${req.params.id}`)
 		const $ = cheerio.load(request.data)
-		const book_title = $('.leftContainer #topcol #bookTitle').text().trim()
+		const book_title = $('.BookPage__rightColumn .BookPageTitleSection__title h1').text().trim()
 		let book_author = ''
-	 	$(".leftContainer #topcol #metacol #bookAuthors .authorName__container").each((_,el)=> book_author += $(el).text().trim() )
-		const book_cover = $('.leftContainer #topcol #imagecol .bookCoverContainer #coverImage').attr('src')
-		const book_description = $('.leftContainer #topcol #metacol #descriptionContainer #description span').last().text()
-		const book_rating = $(".leftContainer #topcol #metacol #bookMeta span[itemprop = 'ratingValue']").text().trim()
-		const published = $('.leftContainer #topcol #details .row').last().text().trim()
-		const book_pages = $(".leftContainer #topcol #details .row span[itemprop = 'numberOfPages']").text().trim()
+	 	$(".BookPage__rightColumn .ContributorLinksList .ContributorLink").each((i,el)=> book_author += i > 0 ? `, ${$(el).text().trim()}` : `${$(el).text().trim()}` )
+		const book_cover = $('.BookPage__leftColumn .BookCover .BookCover__image .ResponsiveImage').attr('src')
+		const book_description = $('.BookPage__rightColumn .BookPageMetadataSection__description .Formatted').text()
+		const book_rating = $(".BookPage__rightColumn .BookPageMetadataSection__ratingStats .RatingStatistics__rating").text().trim()
+		const published = $('.BookPage__rightColumn .BookDetails .FeaturedDetails p').last().text().trim()
+		const book_pages = $('.BookPage__rightColumn .BookDetails .FeaturedDetails p').first().text().trim()
+		let genres:string[] = [] 
+		$('.BookPage__rightColumn .CollapsableList .BookPageMetadataSection__genreButton').each((_,el)=> genres.push($(el).text().trim()))
 		const response: Book = {
 			title: book_title,
 			author: book_author,
 			description: book_description,
+			genres,
 			published,
-			image: `${book_cover?.substring(0,book_cover.length - 12)}${book_cover?.substring(book_cover.length - 4, book_cover.length)}`,
+			image: `${book_cover}`,
 			rating: book_rating,
 			pages: book_pages,
 	};
